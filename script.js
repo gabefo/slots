@@ -1,12 +1,12 @@
 const ITEMS = [
-  "bell",
-  "cherries",
-  "clover",
-  "gem",
-  "lemon",
-  "pig",
-  "pig_nose",
-  "star",
+  "Bell",
+  "Cherries",
+  "Clover",
+  "Gem",
+  "Lemon",
+  "Pig",
+  "Nose",
+  "Star",
 ];
 const ITEM_HEIGHT = 50;
 const VISIBLE_HEIGHT = ITEM_HEIGHT * 3;
@@ -35,18 +35,25 @@ const slot3 = {
 };
 
 const playBtn = document.getElementById("play-btn");
+const resultEl = document.getElementById("result");
 
-const gerRandomResult = () => Math.floor(Math.random() * ITEMS.length);
+const getRandomResult = () => Math.floor(Math.random() * ITEMS.length);
 
 const play = () => {
-  const results = [gerRandomResult(), gerRandomResult(), gerRandomResult()];
+  const results = [getRandomResult(), getRandomResult(), getRandomResult()];
+
+  playBtn.setAttribute("disabled", "");
+  resultEl.innerHTML = "";
+
   spinSlot(slot1, results[0], 5);
   spinSlot(slot2, results[1], 10);
-  spinSlot(slot3, results[2], 15);
-  console.log(results.map((i) => ITEMS[i]));
+  spinSlot(slot3, results[2], 15, () => {
+    playBtn.removeAttribute("disabled");
+    resultEl.innerHTML = results.map((i) => ITEMS[i]).join(", ");
+  });
 };
 
-const spinSlot = (slot, result, turn) => {
+const spinSlot = (slot, result, turn, cb) => {
   const update = () => {
     const currentTime = Date.now();
 
@@ -56,6 +63,9 @@ const spinSlot = (slot, result, turn) => {
       window.requestAnimationFrame(update);
     } else {
       slot.offset = slot.offsetLimit % TOTAL_HEIGHT;
+      if (cb) {
+        cb();
+      }
     }
 
     slot.lastUpdate = currentTime;
