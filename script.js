@@ -8,10 +8,13 @@ const ITEMS = [
   "Nose",
   "Star",
 ];
-const ITEM_HEIGHT = 50;
-const VISIBLE_HEIGHT = ITEM_HEIGHT * 3;
-const TOTAL_HEIGHT = ITEMS.length * ITEM_HEIGHT;
-const SPEED = 1.5;
+const ITEM_HEIGHT = 100;
+const TOTAL_ITEMS = ITEMS.length;
+const TOTAL_HEIGHT = TOTAL_ITEMS * ITEM_HEIGHT;
+const VISIBLE_ITEMS = 5;
+const VISIBLE_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
+const MIDDLE_POS = VISIBLE_HEIGHT / 2 - ITEM_HEIGHT / 2;
+const SPEED = 2;
 
 const slot1 = {
   items: document.querySelectorAll(".slot-1 > .item"),
@@ -72,26 +75,17 @@ const spinSlot = (slot, result, turn, cb) => {
 
     for (let i = 0; i < slot.items.length; i++) {
       let y =
-        ((VISIBLE_HEIGHT - ITEM_HEIGHT) / 2 - i * ITEM_HEIGHT + slot.offset) %
-        TOTAL_HEIGHT;
-
-      if (y <= -TOTAL_HEIGHT / 2) {
-        y += TOTAL_HEIGHT;
-      } else if (y >= TOTAL_HEIGHT / 2) {
-        y -= TOTAL_HEIGHT;
-      }
+        MIDDLE_POS +
+        ((TOTAL_HEIGHT - ITEM_HEIGHT * i + slot.offset + TOTAL_HEIGHT / 2) %
+          TOTAL_HEIGHT) -
+        TOTAL_HEIGHT / 2;
 
       slot.items[i].style.top = `${y}px`;
     }
   };
 
   slot.lastUpdate = Date.now();
-  slot.offsetTarget =
-    slot.offset +
-    turn * TOTAL_HEIGHT +
-    (TOTAL_HEIGHT + result * ITEM_HEIGHT) -
-    slot.offset;
-
+  slot.offsetTarget = turn * TOTAL_HEIGHT + result * ITEM_HEIGHT;
   window.requestAnimationFrame(update);
 };
 
