@@ -81,16 +81,17 @@ const spinSlot = (slot, result, duration, cb) => {
       }
     }
 
-    slot.lastUpdate = currentTime;
-
     updatePosition(slot);
+
+    slot.lastUpdate = currentTime;
   };
 
+  const offset = slot.offset % slot.items.length;
   const offsetTarget =
-    Math.ceil(duration / 1000) * 5 * slot.items.length + result;
-  const speed = offsetTarget / duration;
+    (1 + Math.round(duration / 1000) * 3) * slot.items.length + result;
+  const speed = (offsetTarget - offset) / duration;
 
-  slot.offset = slot.offset % slot.items.length;
+  slot.offset = offset;
   slot.offsetTarget = offsetTarget;
   slot.speed = speed;
   slot.lastUpdate = Date.now();
