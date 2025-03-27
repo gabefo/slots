@@ -8,18 +8,13 @@ const ITEMS = [
   "Nose",
   "Star",
 ];
-const ITEM_HEIGHT = 100;
 const TOTAL_ITEMS = ITEMS.length;
-const TOTAL_HEIGHT = TOTAL_ITEMS * ITEM_HEIGHT;
-const VISIBLE_ITEMS = 5;
-const VISIBLE_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
-const MIDDLE_POS = VISIBLE_HEIGHT / 2 - ITEM_HEIGHT / 2;
-const SPEED = 2;
 
 const slot1 = {
   items: document.querySelectorAll(".slot-1 > .item"),
   offset: 0,
   offsetTarget: 0,
+  speed: 0,
   lastUpdate: Date.now(),
 };
 
@@ -27,6 +22,7 @@ const slot2 = {
   items: document.querySelectorAll(".slot-2 > .item"),
   offset: 0,
   offsetTarget: 0,
+  speed: 0,
   lastUpdate: Date.now(),
 };
 
@@ -34,6 +30,7 @@ const slot3 = {
   items: document.querySelectorAll(".slot-3 > .item"),
   offset: 0,
   offsetTarget: 0,
+  speed: 0,
   lastUpdate: Date.now(),
 };
 
@@ -48,24 +45,24 @@ const play = () => {
   playBtn.setAttribute("disabled", "");
   resultEl.innerHTML = "";
 
-  spinSlot(slot1, results[0], 5);
-  spinSlot(slot2, results[1], 10);
-  spinSlot(slot3, results[2], 15, () => {
+  spinSlot(slot1, results[0], 500);
+  spinSlot(slot2, results[1], 1000);
+  spinSlot(slot3, results[2], 1500, () => {
     playBtn.removeAttribute("disabled");
     resultEl.innerHTML = results.map((i) => ITEMS[i]).join(", ");
   });
 };
 
-const spinSlot = (slot, result, turn, cb) => {
+const spinSlot = (slot, result, duration, cb) => {
   const update = () => {
     const currentTime = Date.now();
 
     if (slot.offset < slot.offsetTarget) {
       const ellapsedTime = currentTime - slot.lastUpdate;
-      slot.offset += SPEED * ellapsedTime;
+      slot.offset += slot.speed * ellapsedTime;
       window.requestAnimationFrame(update);
     } else {
-      slot.offset = slot.offsetTarget % TOTAL_HEIGHT;
+      slot.offset = slot.offsetTarget;
       if (cb) {
         cb();
       }
@@ -75,17 +72,20 @@ const spinSlot = (slot, result, turn, cb) => {
 
     for (let i = 0; i < slot.items.length; i++) {
       let y =
-        MIDDLE_POS +
-        ((TOTAL_HEIGHT - ITEM_HEIGHT * i + slot.offset + TOTAL_HEIGHT / 2) %
-          TOTAL_HEIGHT) -
-        TOTAL_HEIGHT / 2;
+        ((TOTAL_ITEMS - i + slot.offset + TOTAL_ITEMS / 2) % TOTAL_ITEMS) -
+        TOTAL_ITEMS / 2;
 
-      slot.items[i].style.top = `${y}px`;
+      slot.items[i].style.transform = `translateY(${y * 100}%)`;
     }
   };
 
+  const offsetTarget = Math.ceil(duration / 1000) * 5 * TOTAL_ITEMS + result;
+  const speed = offsetTarget / duration;
+
+  slot.offset = slot.offset % TOTAL_ITEMS;
+  slot.offsetTarget = offsetTarget;
+  slot.speed = speed;
   slot.lastUpdate = Date.now();
-  slot.offsetTarget = turn * TOTAL_HEIGHT + result * ITEM_HEIGHT;
   window.requestAnimationFrame(update);
 };
 
