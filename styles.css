@@ -88,3 +88,71 @@ body {
   line-height: 1.5;
   min-height: 1lh;
 }
+
+.play-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 188px;
+  height: 96px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  font-size: 2rem;
+  font-weight: 900;
+  text-shadow: 0 2px #41001f;
+  line-height: 1;
+  text-transform: uppercase;
+  color: #eaeaea;
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.3s;
+}
+
+.play-btn:disabled {
+  filter: contrast(30%) grayscale(100%);
+  transform: scale(0.95);
+}
+
+.play-btn:not(:disabled):active {
+  transform: scale(0.95);
+}
+
+.play-btn-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/play_button.png");
+  background-repeat: no-repeat;
+  background-size: 250% 100%;
+  background-position: center;
+  background-clip: content-box;
+  padding: 0 56px;
+  z-index: -1;
+}
+
+.play-btn-bg::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 56px;
+  background-image: url("/assets/play_button.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.play-btn-bg::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 56px;
+  background-image: url("/assets/play_button.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: 100% 0;
+}
