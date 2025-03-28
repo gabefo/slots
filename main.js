@@ -58,39 +58,33 @@ const updatePosition = (slot) => {
 };
 
 const spinSlot = (slot, slotIndex, result, cb) => {
-  const target = (5 + slotIndex) * slot.items.length + result;
-  const delay = 100 * slotIndex;
-  const duration = ((target - slot.offset) / slot.items.length) * 200;
+  const to = (4 + slotIndex * 2) * slot.items.length + result;
+  const diff = to - slot.offset;
 
-  console.log(duration);
+  const startAnimation = {
+    value: to - 1,
+    duration: (diff - 1) * 25,
+    delay: 150 * slotIndex,
+    easing: "linear",
+  };
 
   anime({
     targets: slot,
     offset:
       slotIndex < 2
         ? [
+            startAnimation,
             {
-              value: target - 1,
-              duration: duration,
-              delay: delay,
-              easing: "linear",
-            },
-            {
-              value: target,
-              duration: 200,
+              value: to,
+              duration: 300,
               easing: "easeOutElastic",
             },
           ]
         : [
+            startAnimation,
             {
-              value: target,
-              duration: duration,
-              delay: delay,
-              easing: "linear",
-            },
-            {
-              value: target + slot.items.length,
-              duration: 1000,
+              value: to + slot.items.length,
+              duration: 100 * (slot.items.length + 1),
               easing: "easeOutQuad",
             },
           ],
