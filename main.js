@@ -1,104 +1,122 @@
 const ITEMS = [
-  "Bell",
-  "Cherries",
-  "Clover",
-  "Gem",
-  "Lemon",
-  "Pig",
-  "Nose",
-  "Star",
+  { name: "Bell", src: "/assets/bell.png" },
+  { name: "Cherries", src: "/assets/cherries.png" },
+  { name: "Clover", src: "/assets/clover.png" },
+  { name: "Gem", src: "/assets/gem.png" },
+  { name: "Lemon", src: "/assets/lemon.png" },
+  { name: "Pig", src: "/assets/pig.png" },
+  { name: "Nose", src: "/assets/pig_nose.png" },
+  { name: "Star", src: "/assets/star.png" },
 ];
 
-const slot1 = {
-  items: document.querySelectorAll(".slot-1 > .item"),
-  offset: 0,
-};
+const TOTAL_ITEMS = ITEMS.length;
 
-const slot2 = {
-  items: document.querySelectorAll(".slot-2 > .item"),
-  offset: 0,
-};
-
-const slot3 = {
-  items: document.querySelectorAll(".slot-3 > .item"),
-  offset: 0,
-};
+const slots = [];
 
 const playBtn = document.getElementById("play-btn");
-const resultEl = document.getElementById("result");
 
-const getRandomResult = () => Math.floor(Math.random() * ITEMS.length);
+const calculateDistance = (from, to, min) =>
+  min + ((TOTAL_ITEMS + to - ((from + min) % TOTAL_ITEMS)) % TOTAL_ITEMS);
 
-const init = () => {
-  updatePosition(slot1);
-  updatePosition(slot2);
-  updatePosition(slot3);
-};
+const calculateDuration = (distance) => distance * 10;
 
-const play = () => {
-  const results = [getRandomResult(), getRandomResult(), getRandomResult()];
-
-  playBtn.setAttribute("disabled", "");
-  resultEl.innerHTML = "";
-
-  spinSlot(slot1, 0, results[0]);
-  spinSlot(slot2, 1, results[1]);
-  spinSlot(slot3, 2, results[2], () => {
-    playBtn.removeAttribute("disabled");
-    resultEl.innerHTML = results.map((i) => ITEMS[i]).join(", ");
-  });
-};
-
-const updatePosition = (slot) => {
-  const len = slot.items.length;
-  for (let i = 0; i < len; i++) {
-    const pos = ((len - i + slot.offset + len / 2) % len) - len / 2;
-    slot.items[i].style.transform = `translateY(${pos * 100}%)`;
+const updateTransform = (slot) => {
+  for (let i = 0; i < TOTAL_ITEMS; i++) {
+    const y =
+      ((TOTAL_ITEMS - i + slot.offset + TOTAL_ITEMS / 2) % TOTAL_ITEMS) -
+      TOTAL_ITEMS / 2;
+    slot.nodes[i].style.transform = `translateY(${y * 100}%)`;
   }
 };
 
-const spinSlot = (slot, slotIndex, result, cb) => {
-  const to = (4 + slotIndex * 2) * slot.items.length + result;
-  const diff = to - slot.offset;
+const getRandomResult = () => {
+  const result = [];
+  for (let i = 0; i < slots.length; i++) {
+    result.push(Math.floor(Math.random() * TOTAL_ITEMS));
+  }
+  return result;
+};
 
-  const startAnimation = {
-    value: to - 1,
-    duration: (diff - 1) * 25,
-    delay: 150 * slotIndex,
-    easing: "linear",
+const createSlot = (element) => {
+  const nodes = [];
+
+  for (let i = 0; i < TOTAL_ITEMS; i++) {
+    const item = document.createElement("div");
+    item.className = "item";
+
+    const img = document.createElement("img");
+    img.src = ITEMS[i].src;
+    img.alt = ITEMS[i].name;
+
+    item.appendChild(img);
+    element.appendChild(item);
+
+    nodes.push(item);
+  }
+
+  const slot = {
+    nodes: nodes,
+    offset: 0,
   };
+
+  updateTransform(slot);
+
+  return slot;
+};
+
+const spinSlot = (slot, slotIndex, result, cb) => {
+  const from = slot.offset;
+  const distance = calculateDistance(from, result, 50 + 10 * slotIndex);
+  const to = from + distance;
 
   anime({
     targets: slot,
-    offset:
-      slotIndex < 2
-        ? [
-            startAnimation,
-            {
-              value: to,
-              duration: 300,
-              easing: "easeOutElastic",
-            },
-          ]
-        : [
-            startAnimation,
-            {
-              value: to + slot.items.length,
-              duration: 100 * (slot.items.length + 1),
-              easing: "easeOutQuad",
-            },
-          ],
+    offset: [
+      {
+        value: to - 20,
+        duration: calculateDuration(distance - 20),
+        delay: calculateDuration(5) * slotIndex,
+        easing: "linear",
+      },
+      {
+        value: to,
+        duration: calculateDuration(20) * 2,
+        easing: "easeOutQuad",
+      },
+    ],
     update: () => {
-      updatePosition(slot);
+      updateTransform(slot);
     },
     complete: () => {
-      slot.offset = slot.offset % slot.items.length;
+      slot.offset = slot.offset % TOTAL_ITEMS;
 
       if (cb) {
         cb();
       }
     },
   });
+};
+
+const init = () => {
+  const elements = document.querySelectorAll(".slot");
+  for (let i = 0; i < elements.length; i++) {
+    slots.push(createSlot(elements[i]));
+  }
+};
+
+const play = () => {
+  const result = getRandomResult();
+
+  playBtn.setAttribute("disabled", "");
+
+  for (let i = 0; i < slots.length; i++) {
+    spinSlot(slots[i], i, result[i], () => {
+      if (i === slots.length - 1) {
+        playBtn.removeAttribute("disabled");
+        console.log(result.map((result) => ITEMS[result].name));
+      }
+    });
+  }
 };
 
 init();

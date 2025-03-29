@@ -3,19 +3,32 @@ body {
   padding: 0;
 }
 
-.container {
+.game-container {
   display: flex;
   flex-direction: column;
+  height: 100vh;
+}
+
+.game-controls {
+  display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
-  gap: 1rem;
+  padding: 2rem;
+}
+
+.game-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 2rem;
 }
 
 .slots-wrapper {
   position: relative;
   display: flex;
-  width: 50vw;
+  width: 100%;
+  max-width: 600px;
   background-color: #fff;
   border: 4px solid #000;
   overflow: hidden;
@@ -55,7 +68,7 @@ body {
   content: "";
   display: block;
   width: 100%;
-  padding-top: 200%;
+  padding-top: 300%;
 }
 
 .slot + .slot {
@@ -94,12 +107,14 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 188px;
-  height: 96px;
-  padding: 0;
-  border: 0;
+  width: 128px;
+  height: 64px;
+  padding: 2px;
+  border: 2px solid #f0f0f0;
+  border-radius: 24px;
+  box-shadow: inset 0 0 0 2px #fff, 0 0 0 1px rgba(0, 0, 0, 0.2);
   outline: 0;
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 900;
   text-shadow: 0 2px #41001f;
   line-height: 1;
@@ -108,51 +123,42 @@ body {
   background: transparent;
   cursor: pointer;
   user-select: none;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 
-.play-btn:disabled {
-  filter: contrast(30%) grayscale(100%);
-  transform: scale(0.95);
+.play-btn-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #f30880;
+  box-shadow: 0 10px #b0055c;
+  border-radius: 20px;
+  transform: translateY(-10px);
+  transition: all 0.2s;
+  overflow: hidden;
 }
 
-.play-btn:not(:disabled):active {
-  transform: scale(0.95);
-}
-
-.play-btn-bg {
+.play-btn-inner::before {
+  content: "";
   position: absolute;
-  inset: 0;
-  background-image: url("/assets/play_button.png");
-  background-repeat: no-repeat;
-  background-size: 250% 100%;
-  background-position: center;
-  background-clip: content-box;
-  padding: 0 56px;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background-color: #e00070;
   z-index: -1;
 }
 
-.play-btn-bg::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 56px;
-  background-image: url("/assets/play_button.png");
-  background-repeat: no-repeat;
-  background-size: cover;
+.play-btn:disabled .play-btn-inner {
+  filter: contrast(20%) grayscale(100%);
+  transform: translateY(-2px);
+  box-shadow: 0 2px #a00;
 }
 
-.play-btn-bg::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 56px;
-  background-image: url("/assets/play_button.png");
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: 100% 0;
+.play-btn:not(:disabled):active .play-btn-inner {
+  transform: translateY(-2px);
+  box-shadow: 0 2px #a00;
 }
