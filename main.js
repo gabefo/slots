@@ -11,16 +11,24 @@ const ITEMS = [
 
 const TOTAL_ITEMS = ITEMS.length;
 
-const slots = [];
+const game = {
+  slots: [],
+  loading: false,
+  result: [],
+  playBtn: null,
+};
 
-const playBtn = document.getElementById("play-btn");
+game.calculateDistance = function (from, to, min) {
+  return (
+    min + ((TOTAL_ITEMS + to - ((from + min) % TOTAL_ITEMS)) % TOTAL_ITEMS)
+  );
+};
 
-const calculateDistance = (from, to, min) =>
-  min + ((TOTAL_ITEMS + to - ((from + min) % TOTAL_ITEMS)) % TOTAL_ITEMS);
+game.calculateDuration = function (distance) {
+  return distance * 10;
+};
 
-const calculateDuration = (distance) => distance * 10;
-
-const updateTransform = (slot) => {
+game.updateTransform = function (slot) {
   for (let i = 0; i < TOTAL_ITEMS; i++) {
     const y =
       ((TOTAL_ITEMS - i + slot.offset + TOTAL_ITEMS / 2) % TOTAL_ITEMS) -
@@ -29,29 +37,21 @@ const updateTransform = (slot) => {
   }
 };
 
-const getRandomResult = () => {
-  const result = [];
-  for (let i = 0; i < slots.length; i++) {
-    result.push(Math.floor(Math.random() * TOTAL_ITEMS));
-  }
-  return result;
-};
-
-const createSlot = (element) => {
+game.createSlot = function (element) {
   const nodes = [];
 
   for (let i = 0; i < TOTAL_ITEMS; i++) {
-    const item = document.createElement("div");
-    item.className = "item";
+    const div = document.createElement("div");
+    div.className = "item";
 
     const img = document.createElement("img");
     img.src = ITEMS[i].src;
     img.alt = ITEMS[i].name;
 
-    item.appendChild(img);
-    element.appendChild(item);
+    div.appendChild(img);
+    element.appendChild(div);
 
-    nodes.push(item);
+    nodes.push(div);
   }
 
   const slot = {
@@ -59,81 +59,101 @@ const createSlot = (element) => {
     offset: 0,
   };
 
-  updateTransform(slot);
+  this.updateTransform(slot);
 
   return slot;
 };
 
-const spinSlot = (slot, slotIndex, result, instant, cb) => {
-  const from = slot.offset;
-  const distance = calculateDistance(from, result, 50 + 25 * slotIndex);
-  const to = from + distance;
-  const delay = calculateDuration(5) * slotIndex;
+game.spinSlot = function (slotIndex) {
+  const slot = this.slots[slotIndex];
+  const distance = this.calculateDistance(
+    slot.offset,
+    this.result[slotIndex],
+    50 + 25 * slotIndex
+  );
+  const to = slot.offset + distance;
 
   anime({
     targets: slot,
-    offset: instant
-      ? [
-          {
-            value: to - 3,
-            duration: calculateDuration(distance - 3),
-            delay: delay,
-            easing: "linear",
-          },
-          {
-            value: to,
-            duration: calculateDuration(3) * 4.7,
-            easing: "easeOutBack",
-          },
-        ]
-      : [
-          {
-            value: to - 50,
-            duration: calculateDuration(distance - 50),
-            delay: delay,
-            easing: "linear",
-          },
-          {
-            value: to,
-            duration: calculateDuration(50) * 5,
-            easing: "easeOutQuint",
-          },
-        ],
+    offset:
+      slotIndex < this.slots.length - 1
+        ? [
+            {
+              value: to - 3,
+              duration: this.calculateDuration(distance - 3),
+              easing: "linear",
+            },
+            {
+              value: to,
+              duration: this.calculateDuration(3) * 4.7,
+              easing: "easeOutBack",
+            },
+          ]
+        : [
+            {
+              value: to - 50,
+              duration: this.calculateDuration(distance - 50),
+              easing: "linear",
+            },
+            {
+              value: to,
+              duration: this.calculateDuration(50) * 5,
+              easing: "easeOutQuint",
+            },
+          ],
     update: () => {
-      updateTransform(slot);
+      this.updateTransform(slot);
     },
     complete: () => {
       slot.offset = slot.offset % TOTAL_ITEMS;
 
-      if (cb) {
-        cb();
+      if (slotIndex === this.slots.length - 1) {
+        this.onStopSpinning();
       }
     },
   });
 };
 
-const init = () => {
-  const elements = document.querySelectorAll(".slot");
+game.init = function (container) {
+  const playBtn = (this.playBtn = container.querySelector(".play-btn"));
+
+  playBtn.addEventListener("click", () => {
+    this.play();
+  });
+
+  const elements = container.querySelectorAll(".slot");
+
   for (let i = 0; i < elements.length; i++) {
-    slots.push(createSlot(elements[i]));
+    this.slots.push(this.createSlot(elements[i]));
   }
 };
 
-const play = () => {
-  const result = getRandomResult();
+game.fetchResult = function () {
+  this.loading = true;
 
-  playBtn.setAttribute("disabled", "");
+  const values = [];
 
-  for (let i = 0; i < slots.length; i++) {
-    spinSlot(slots[i], i, result[i], i < slots.length - 1, () => {
-      if (i === slots.length - 1) {
-        playBtn.removeAttribute("disabled");
-        console.log(result.map((result) => ITEMS[result].name));
-      }
-    });
+  for (let i = 0; i < this.slots.length; i++) {
+    values.push(Math.floor(Math.random() * TOTAL_ITEMS));
+  }
+
+  this.result = values;
+  this.loading = false;
+};
+
+game.onStopSpinning = function () {
+  this.playBtn.removeAttribute("disabled");
+  console.log(this.result.map((result) => ITEMS[result].name));
+};
+
+game.play = function () {
+  this.playBtn.setAttribute("disabled", "");
+
+  this.fetchResult();
+
+  for (let i = 0; i < this.slots.length; i++) {
+    this.spinSlot(i);
   }
 };
 
-init();
-
-playBtn.addEventListener("click", play);
+game.init(document.getElementById("game"));
