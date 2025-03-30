@@ -13,9 +13,22 @@ const TOTAL_ITEMS = ITEMS.length;
 
 const game = {
   slots: [],
-  loading: false,
   result: [],
   playBtn: null,
+};
+
+game.init = function (container) {
+  const playBtn = (this.playBtn = container.querySelector(".play-btn"));
+
+  playBtn.addEventListener("click", () => {
+    this.onSpin();
+  });
+
+  const elements = container.querySelectorAll(".slot");
+
+  for (let i = 0; i < elements.length; i++) {
+    this.slots.push(this.createSlot(elements[i], i));
+  }
 };
 
 game.calculateDistance = function (from, to, min) {
@@ -25,7 +38,7 @@ game.calculateDistance = function (from, to, min) {
 };
 
 game.calculateDuration = function (distance) {
-  return distance * 10;
+  return distance * 30;
 };
 
 game.updateTransform = function (slot) {
@@ -37,7 +50,7 @@ game.updateTransform = function (slot) {
   }
 };
 
-game.createSlot = function (element) {
+game.createSlot = function (element, index) {
   const nodes = [];
 
   for (let i = 0; i < TOTAL_ITEMS; i++) {
@@ -55,8 +68,10 @@ game.createSlot = function (element) {
   }
 
   const slot = {
-    nodes: nodes,
+    index: index,
     offset: 0,
+    animation: null,
+    nodes: nodes,
   };
 
   this.updateTransform(slot);
@@ -64,96 +79,86 @@ game.createSlot = function (element) {
   return slot;
 };
 
-game.spinSlot = function (slotIndex) {
-  const slot = this.slots[slotIndex];
-  const distance = this.calculateDistance(
-    slot.offset,
-    this.result[slotIndex],
-    50 + 25 * slotIndex
-  );
-  const to = slot.offset + distance;
-
-  anime({
-    targets: slot,
-    offset:
-      slotIndex < this.slots.length - 1
-        ? [
-            {
-              value: to - 3,
-              duration: this.calculateDuration(distance - 3),
-              easing: "linear",
-            },
-            {
-              value: to,
-              duration: this.calculateDuration(3) * 4.7,
-              easing: "easeOutBack",
-            },
-          ]
-        : [
-            {
-              value: to - 50,
-              duration: this.calculateDuration(distance - 50),
-              easing: "linear",
-            },
-            {
-              value: to,
-              duration: this.calculateDuration(50) * 5,
-              easing: "easeOutQuint",
-            },
-          ],
-    update: () => {
-      this.updateTransform(slot);
-    },
-    complete: () => {
-      slot.offset = slot.offset % TOTAL_ITEMS;
-
-      if (slotIndex === this.slots.length - 1) {
-        this.onStopSpinning();
-      }
-    },
-  });
-};
-
-game.init = function (container) {
-  const playBtn = (this.playBtn = container.querySelector(".play-btn"));
-
-  playBtn.addEventListener("click", () => {
-    this.play();
-  });
-
-  const elements = container.querySelectorAll(".slot");
-
-  for (let i = 0; i < elements.length; i++) {
-    this.slots.push(this.createSlot(elements[i]));
-  }
-};
-
-game.fetchResult = function () {
-  this.loading = true;
-
-  const values = [];
-
+game.startSpinning = function () {
   for (let i = 0; i < this.slots.length; i++) {
-    values.push(Math.floor(Math.random() * TOTAL_ITEMS));
+    const slot = this.slots[i];
+
+    slot.animation = anime({
+      targets: slot,
+      offset: slot.offset + TOTAL_ITEMS,
+      duration: this.calculateDuration(TOTAL_ITEMS),
+      easing: "linear",
+      loop: true,
+      update: () => {
+        this.updateTransform(slot);
+      },
+    });
+  }
+};
+
+game.stopSpinning = async function () {
+  for (let i = 0; i < this.slots.length; i++) {
+    const slot = this.slots[i];
+
+    const distance = this.calculateDistance(
+      slot.offset,
+      this.result[slot.index],
+      1
+    );
+
+    const to = slot.offset + distance;
+
+    if (slot.animation) {
+      slot.animation.pause();
+    }
+
+    slot.animation = anime({
+      targets: slot,
+      offset: [
+        {
+          value: to - 1,
+          duration: this.calculateDuration(distance - 1),
+          easing: "linear",
+        },
+        {
+          value: to,
+          duration: this.calculateDuration(1) * 4.7,
+          easing: "easeOutBack",
+        },
+      ],
+      endDelay: i < this.slots.length - 1 ? 200 : 0,
+      update: () => {
+        this.updateTransform(slot);
+      },
+    });
+
+    await slot.animation.finished;
   }
 
-  this.result = values;
-  this.loading = false;
+  this.onStopSpinning();
+};
+
+game.onSpin = function () {
+  this.playBtn.setAttribute("disabled", "");
+
+  this.startSpinning();
+
+  window.setTimeout(() => {
+    const result = [];
+
+    for (let i = 0; i < this.slots.length; i++) {
+      result.push(Math.floor(Math.random() * TOTAL_ITEMS));
+    }
+
+    this.result = result;
+
+    this.stopSpinning();
+  }, 500);
 };
 
 game.onStopSpinning = function () {
   this.playBtn.removeAttribute("disabled");
   console.log(this.result.map((result) => ITEMS[result].name));
-};
-
-game.play = function () {
-  this.playBtn.setAttribute("disabled", "");
-
-  this.fetchResult();
-
-  for (let i = 0; i < this.slots.length; i++) {
-    this.spinSlot(i);
-  }
 };
 
 game.init(document.getElementById("game"));

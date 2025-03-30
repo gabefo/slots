@@ -45,7 +45,7 @@ body {
   content: "";
   display: block;
   width: 100%;
-  padding-top: 500%;
+  padding-top: 300%;
 }
 
 .slot + .slot {
