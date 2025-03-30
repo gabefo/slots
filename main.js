@@ -64,26 +64,41 @@ const createSlot = (element) => {
   return slot;
 };
 
-const spinSlot = (slot, slotIndex, result, cb) => {
+const spinSlot = (slot, slotIndex, result, instant, cb) => {
   const from = slot.offset;
-  const distance = calculateDistance(from, result, 50 + 10 * slotIndex);
+  const distance = calculateDistance(from, result, 50 + 25 * slotIndex);
   const to = from + distance;
+  const delay = calculateDuration(5) * slotIndex;
 
   anime({
     targets: slot,
-    offset: [
-      {
-        value: to - 20,
-        duration: calculateDuration(distance - 20),
-        delay: calculateDuration(5) * slotIndex,
-        easing: "linear",
-      },
-      {
-        value: to,
-        duration: calculateDuration(20) * 2,
-        easing: "easeOutQuad",
-      },
-    ],
+    offset: instant
+      ? [
+          {
+            value: to - 3,
+            duration: calculateDuration(distance - 3),
+            delay: delay,
+            easing: "linear",
+          },
+          {
+            value: to,
+            duration: calculateDuration(3) * 4.7,
+            easing: "easeOutBack",
+          },
+        ]
+      : [
+          {
+            value: to - 50,
+            duration: calculateDuration(distance - 50),
+            delay: delay,
+            easing: "linear",
+          },
+          {
+            value: to,
+            duration: calculateDuration(50) * 5,
+            easing: "easeOutQuint",
+          },
+        ],
     update: () => {
       updateTransform(slot);
     },
@@ -110,7 +125,7 @@ const play = () => {
   playBtn.setAttribute("disabled", "");
 
   for (let i = 0; i < slots.length; i++) {
-    spinSlot(slots[i], i, result[i], () => {
+    spinSlot(slots[i], i, result[i], i < slots.length - 1, () => {
       if (i === slots.length - 1) {
         playBtn.removeAttribute("disabled");
         console.log(result.map((result) => ITEMS[result].name));
