@@ -29,6 +29,8 @@ game.init = function (container) {
   for (let i = 0; i < elements.length; i++) {
     this.slots.push(this.createSlot(elements[i], i));
   }
+
+  this.result = Array(elements.length).fill(0);
 };
 
 game.calculateDistance = function (from, to, min) {
